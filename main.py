@@ -172,3 +172,11 @@ def generate_current_week_report(conn):
         print("Week closed.")
     else:
         print("Week remains open.")
+
+
+def view_past_weeks(conn):
+    pass
+
+
+if __name__ = "__main__":
+    main()
