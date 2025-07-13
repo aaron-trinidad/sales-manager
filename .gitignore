@@ -1,0 +1,13 @@
+# Bases de datos y datos generados
+data/
+*.db
+
+# Archivos de sistema
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+
+# Entornos virtuales
+venv/
+.env
