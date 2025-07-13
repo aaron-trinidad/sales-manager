@@ -3,7 +3,12 @@ import sqlite3
 
 from database import initialize_database
 from sales import add_sale, get_brands
-from weeks import close_current_week, get_current_week, get_current_week_range
+from weeks import (
+    close_current_week,
+    ensure_current_week_exists,
+    get_current_week,
+    get_current_week_range,
+)
 
 
 def main():
@@ -38,8 +43,10 @@ def main():
 
 
 def add_sale_menu(conn):
-    start_date, _ = get_current_week_range()
+    start_date, end_date = get_current_week_range()
+    ensure_current_week_exists(conn, start_date, end_date)
     week = get_current_week(conn, start_date)
+    print(f"week: {week}, start_date: {start_date}")
 
     if not week:
         print("No active week found.")
@@ -129,7 +136,7 @@ def generate_current_week_report(conn):
         """
         SELECT sales.day, brands.name, sales.cost
         FROM sales
-        JOIN brands on sales.brand_id = brands.brand_id
+        JOIN brands on sales.brand_id = brands.id
         WHERE sales.week_id = ?
         ORDER BY sales.day, brands.name;
         """,
@@ -178,5 +185,5 @@ def view_past_weeks(conn):
     pass
 
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     main()
