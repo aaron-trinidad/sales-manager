@@ -44,13 +44,10 @@ def main():
 
 def add_sale_menu(conn):
     start_date, end_date = get_current_week_range()
-    ensure_current_week_exists(conn, start_date, end_date)
     week = get_current_week(conn, start_date)
-    print(f"week: {week}, start_date: {start_date}")
 
     if not week:
-        print("No active week found.")
-        return
+        ensure_current_week_exists(conn, start_date, end_date)
 
     if week[3] == "close":
         print("The week is closed.")
@@ -68,10 +65,11 @@ def add_sale_menu(conn):
     ]
 
     while True:
-        print("/n Select the day of the week:")
+        print(f"\nAdding sale to the week of {start_date} to {end_date}")
+        print("\nSelect the day of the week:")
         for i, day in enumerate(days_list, 1):
-            print(f"{i}. {day}")
-        print("0. Return to the main menu")
+            print(f"     {i}. {day}")
+        print("     0. Return to the main menu")
 
         try:
             day_choice = int(input("Chose day: "))
@@ -90,10 +88,10 @@ def add_sale_menu(conn):
         # Loop for multiple sales for the selected day
         while True:
             brands = get_brands(conn)
-            print("\n Available brands:")
+            print("\nAvailable brands:")
             for i, (_, name) in enumerate(brands, 1):
-                print(f"{i}. {name}")
-            print("0. Return to Day Selection")
+                print(f"     {i}. {name}")
+            print("     0. Return to Day Selection")
 
             try:
                 brand_choise = int(input("Select brand: "))
@@ -147,7 +145,7 @@ def generate_current_week_report(conn):
         print("No sales for this week")
         return
 
-    print("\n Weekly sales report:")
+    print("\nWeekly sales report:")
     daily_totals = {}
     total_amount = 0.0
     total_count = 0
