@@ -17,13 +17,12 @@ def get_current_week(conn, start_date):
     return cursor.fetchone()
 
 
-def ensure_current_week_exists(conn, start_date, end_date):
-    if get_current_week(conn, start_date) is None:
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO weeks (start, end, state) VALUES (?, ?, 'open')",
-            (start_date, end_date),
-        )
+def create_current_week(conn, start_date, end_date):
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO weeks (start, end, state) VALUES (?, ?, 'open')",
+        (start_date, end_date),
+    )
 
 
 def get_week_id(conn, start_date):

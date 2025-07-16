@@ -5,10 +5,20 @@ from database import initialize_database
 from sales import add_sale, get_brands
 from weeks import (
     close_current_week,
-    ensure_current_week_exists,
+    create_current_week,
     get_current_week,
     get_current_week_range,
 )
+
+days_list = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+]
 
 
 def main():
@@ -19,7 +29,7 @@ def main():
     initialize_database(conn)
 
     while True:
-        print("\n--------- SALES MANAGER ---------")
+        print("\n---------- SALES MANAGER ----------")
         print("1. Add Sale")
         print("2. Generate Current Week Report")
         print("3. View Past Weeks")
@@ -47,26 +57,18 @@ def add_sale_menu(conn):
     week = get_current_week(conn, start_date)
 
     if not week:
-        ensure_current_week_exists(conn, start_date, end_date)
+        create_current_week(conn, start_date, end_date)
+        week = get_current_week(conn, start_date)
 
     if week[3] == "close":
         print("The week is closed.")
         return
 
     week_id = week[0]
-    days_list = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-    ]
 
     while True:
         print(f"\nAdding sale to the week of {start_date} to {end_date}")
-        print("\nSelect the day of the week:")
+        print("Select the day of the week:")
         for i, day in enumerate(days_list, 1):
             print(f"     {i}. {day}")
         print("     0. Return to the main menu")
@@ -107,7 +109,11 @@ def add_sale_menu(conn):
                 continue
 
             try:
-                cost = float(input("Enter sale cost: "))
+                cost = float(
+                    input(
+                        f"Enter the selling cost of {brands[brand_choise - 1][1]} item: "
+                    )
+                )
             except ValueError:
                 print("Invalid cost. Must be a number.")
                 continue
@@ -145,7 +151,19 @@ def generate_current_week_report(conn):
         print("No sales for this week")
         return
 
-    print("\nWeekly sales report:")
+    cursor.execute(
+        """
+            SELECT brands.name, SUM(sales.cost) as total
+            FROM brands
+            JOIN sales ON brands.id = sales.brand_id
+            WHERE sales.week_id = ?
+            GROUP BY brands.name
+            ORDER BY total DESC;
+            """,
+        (week_id,),
+    )
+    brand_totals = cursor.fetchall()
+
     daily_totals = {}
     total_amount = 0.0
     total_count = 0
@@ -155,18 +173,25 @@ def generate_current_week_report(conn):
         total_amount += cost
         total_count += 1
 
-    for day in sorted(daily_totals.keys()):
-        print(f"\n {day}")
-        day_total = 0
-        for brand, cost in daily_totals[day]:
-            print(f"    - {brand}: ${cost:.2f}")
-            day_total += cost
-        print(f"   Total for {day}: ${day_total:.2f}")
+    print("\n------- Weekly sales report -------")
+    print("Details by day:")
+    for day in days_list:
+        if day in daily_totals:
+            print(f"  {day}")
+            day_total = 0
+            for brand, cost in daily_totals[day]:
+                print(f"    - {brand}: ${cost:.2f}")
+                day_total += cost
+            print(f"    Total for {day}: ${day_total:.2f}")
 
-    print("\n==========================")
+    print("\nTotal revenue by brand:")
+    for brand, total in brand_totals:
+        print(f"    - {brand}: ${total:.2f}")
+
+    print("\n===================================")
     print(f"Total sales: {total_count} items")
     print(f"Total revenue: {total_amount:.2f}")
-    print("==========================\n")
+    print("===================================\n")
 
     if week[3] == "close":
         return
